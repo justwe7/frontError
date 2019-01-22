@@ -2,9 +2,21 @@
 
 ---
 
-### 前言
-JavaScript执行会将script代码任务提取至队列执行，如果遇到代码异常情况，且没有异常处理会导致当前任务停止执行抛出错误，继续执行下一个任务
+### 使用  
+npm 使用：
+``` bash
+npm i frontError -S 
 
+import 'frontError'
+```
+单文件引入
+```javascript
+<script src="frontError.min.js"></script>
+```
+new frontError({
+  reportUrl: "http://127.0.0.1:8888/", 
+  auto: true
+})
 
 ### 目标
 

@@ -10,7 +10,7 @@ import Report from './report.js';
     // window[name] = definition;
   }
   window[name] = definition();
-})('Report', function () {
+})('frontError', function () {
   return Report
 });
 // import '../dist/report.js';
