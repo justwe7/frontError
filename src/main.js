@@ -13,9 +13,8 @@ import Report from './report.js';
 })('frontError', function () {
   return Report
 });
-// import '../dist/report.js';
-// console.log(Report);
-// new Report({
+// import '../dist/frontError.min.js';
+// new frontError({
 //   reportUrl: "http://www.1763.com"
 // })
 // jhgfg
