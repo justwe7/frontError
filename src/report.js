@@ -1,7 +1,4 @@
-
 /**
- * XMLHttpRequest劫持源码参照 https://github.com/wendux/Ajax-hook
- * 
  * @author huaxi.li
  * @date 2019-01-09
  * @class Report
@@ -13,7 +10,7 @@ export default class Report {
   constructor(props = {reportUrl: "http://127.0.0.1:8888/", auto: true}) {
     // console.log(props);
     this.reportUrl = props.reportUrl;
-    this.dote = "&kx&";
+    this.splitSymbol = "&kx&";
     this.auto = props.auto;
     this.create();
   }
@@ -28,7 +25,7 @@ export default class Report {
     if (error===null) {
       return false;
     }
-    console.log(error);
+    // console.log(error);
     new Image().src = `${this.reportUrl}?kxError=${error}`;
     clearStorage("_kx_error")
   } 
@@ -38,19 +35,18 @@ export default class Report {
       errVal = encodeURI(JSON.stringify(obj))
     } catch (error) {}
     
-    // new Image().src = `${this.reportUrl}?info=${errVal}`;
+    new Image().src = `${this.reportUrl}?info=${errVal}`;
     // console.log(obj);
-    this.saveStorage(errVal);
+    // this.saveStorage(errVal);
   }
   saveStorage(value) {//记录报错信息
     let storage = getStorage("_kx_error");
-    let newError = storage===null ? value : (storage+ this.dote+value)
+    let newError = storage===null ? value : (storage + this.splitSymbol + value);
     saveStorage("_kx_error", newError);
-    var reg = new RegExp(this.dote, "g");  
+    var reg = new RegExp(this.splitSymbol, "g");  
     // console.warn(newError.match(reg));
-    console.log(newError.split(this.dote));
-    if (newError.match(reg) !== null && newError.match(reg).length>1 && this.auto) {
-      console.log(newError.match(reg).length);
+    if (newError.match(reg) !== null && newError.match(reg).length>5 && this.auto) {
+      // console.log(newError.match(reg).length);
       this.sendError();
     }
   }
@@ -83,7 +79,7 @@ export default class Report {
     //代码运行报错
     const self = this;
     window.onerror = function() {
-      let [errorMessage, fileName, lineNo, columNo, error] = arguments;
+      let [errorMessage, fileName, lineNo, columNo] = arguments;
       let obj = {
         type: "eventError",//类型  ErrorEvent  
         userAgent: window.navigator.userAgent,
@@ -97,11 +93,6 @@ export default class Report {
         }
       }
       self.report(obj)
-      /* console.log("errorMessage:" + errorMessage);
-      console.log("scriptURI:" + scriptURI);
-      console.log("lineNo:" + lineNo); //异常行号
-      console.log("columNo:" + columNo); //异常列号
-      console.log("error:" + error); //异常堆栈信息 */
       return true;
     };
   }
@@ -120,14 +111,11 @@ export default class Report {
         // var ajax = xhr.xhr;
         const { xhr: ajax, method, send_time} = xhr;
         if (ajax.readyState == 4) {
-          if (+new Date > (3000+send_time)) {//时间过长处理
-            
-          }
+        const {status, statusText, response, responseURL} = ajax;
+        const longTime = (+new Date > (3000+send_time)),httpError = !(status >= 200 && status < 208);
+
           //说明已经请求完毕
-          if (ajax.status >= 200 && ajax.status < 208) {
-            // console.log(ajax);
-          } else {
-            // console.log(ajax);
+          if (longTime || httpError) {
             let obj = {
               type: "httpError",//类型  ErrorEvent  
               userAgent: window.navigator.userAgent,
@@ -136,12 +124,13 @@ export default class Report {
               errorInfo: {
                 req: {
                   method: method,
-                  url: ajax.responseURL
+                  url: responseURL
                 },
                 res: {
-                  status: ajax.status,
-                  statusText: ajax.statusText,
-                  response: ajax.response
+                  status,
+                  statusText,
+                  response,
+                  longTime
                 }
               }
             }

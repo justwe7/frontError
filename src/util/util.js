@@ -1,6 +1,6 @@
 export function saveStorage(key, value) {
     try {
-      window.localStorage.setItem(key , value);
+      return window.localStorage.setItem(key , value);
     } catch (error) {
       
     }

@@ -1,3 +1,4 @@
+// XMLHttpRequest劫持源码参照 https://github.com/wendux/Ajax-hook
 export default proxy => {
   window._ahrealxhr = window._ahrealxhr || XMLHttpRequest;
   XMLHttpRequest = function() {
