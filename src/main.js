@@ -7,10 +7,16 @@ import Report from './report.js';
   } else if (typeof module !== 'undefined' && module.exports) {// 检查上下文环境是否为Node
     module.exports = definition();
   } else {// 将模块的执行结果挂在window变量中，在浏览器中this指向window对象
-    window[name]= definition();
+    // window[name] = definition;
   }
+  window[name] = definition();
 })('Report', function () {
-  return function (param) {
-    new Report(param)
-  };
+  return Report
 });
+// import '../dist/report.js';
+// console.log(Report);
+// new Report({
+//   reportUrl: "http://www.1763.com"
+// })
+// jhgfg
+
