@@ -7,16 +7,23 @@ npm 使用：
 ``` bash
 npm i frontError -S 
 
-import 'frontError'
+main.js: 
+import frontError from 'frontError'
 ```
 单文件引入
 ```javascript
 <script src="frontError.min.js"></script>
 ```
+
+实例化
+```javascript
 new frontError({
-  reportUrl: "http://127.0.0.1:8888/", 
-  auto: true
+  reportUrl: "https://justwe.com/img.png",//上报地址
+  uuid: "justwe_uuid",//uuid 用户标识key
+  timeout: 5000, //接口响应过长阈值
+  radom: 1, //错误过多减少上报数量  0-1
 })
+```
 
 ### 目标
 
@@ -65,11 +72,13 @@ window.addEventListener('error', (msg) => {
   ```javascript
   {
     type: "resourceError",//类型  ErrorEvent  
-    userAgent: "ie6",//浏览器请求头
-    baseURI: "http://www.163.com",//当前页面地址
     time: 17444463423,//时间戳
     errorInfo: {
-      href: "http://localhost:8080/style.css",//资源
+      {
+        resourceUri: "http://10.2.200.83:8080/iframe/bbb.css",//资源引入地址
+        outerHTML: "<link rel=\"stylesheet\" type=\"text/css\" media=\"screen\" href=\"bbb.css\">",
+        tagName: "LINK"
+      }
     }
   }
   ```
@@ -77,14 +86,13 @@ window.addEventListener('error', (msg) => {
   ```javascript   
   {
     type: "eventError",//类型  ErrorEvent  
-    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
-    baseURI: "http://localhost:4000",
     time: 1502863944724,
     errorInfo: {
-      "fileName": "http://localhost:4000/test.js",
-      "message": "Uncaught ReferenceError: aler is not defined",
-      "lineNumber": 1,
-      "columnNumber": 1,
+      scriptURI: "http://localhost:4000/test.js",
+      message: "Uncaught ReferenceError: ASDF is not defined",
+      lineNumber: 23, // 异常行号
+      columnNumber: 5, // 异常列号
+      errStack: "ReferenceError: ASDF is not defined\n    at http://10.2.200.83:8080/iframe/b.html:23:5"//报错堆栈
     }
   }
   ```
@@ -92,8 +100,6 @@ window.addEventListener('error', (msg) => {
   ```javascript   
   {
     type: "httpError",//类型  ErrorEvent  
-    userAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:54.0) Gecko/20100101 Firefox/54.0",
-    baseURI: "http://localhost:4000",
     time: 1502863944724,
     errorInfo: {
       req: {
@@ -101,9 +107,10 @@ window.addEventListener('error', (msg) => {
         url: "/login"
       },
       res: {
-        status: 403,
-        statusText: "Forbidden",
-        response: "{\"error\":\"wrong password\"}"
+        status: 404,
+        statusText: "Not Found",
+        response: "404 Not Found\n",
+        resMs: time //接口响应时间时长 (毫秒)
       }
     }
   }

@@ -3,101 +3,124 @@
  * @date 2019-01-09
  * @class Report
  */
-import { saveStorage,getStorage,clearStorage } from './util/util';
-import proxyXMLHttpRequest from './util/xhr';
+import {
+  getUuid,
+  getCookie
+} from "./util/util";
+import proxyXMLHttpRequest from "./util/xhr";
 
-var Report = function (props = {reportUrl: "http://127.0.0.1:8888/", auto: true}) {
-  this.reportUrl = props.reportUrl;
-  this.splitSymbol = "&kx&";
-  this.auto = props.auto;
+const Report = function(
+  {
+    reportUrl = "https://justwe.com/img.png",//上报地址
+    uuid = "justwe_uuid",//uuid 用户标识
+    timeout = 5000, //接口响应过长阈值
+    radom = 1, //错误过多减少上报数量  0-1
+  } = {}
+) {
+  this.reportUrl = reportUrl;
+  this.httpLongTime = timeout;
+  this.uuid = getCookie(uuid) || getUuid(uuid); 
+  this.radom = parseFloat(radom);
   this.create();
-}
-Report.prototype.create = function () {
-  this.auto && this.sendError();
+};
+Report.prototype.create = function() {
   this.httpError();
   this.resourceError();
   this.eventError();
-}
-Report.prototype.sendError = function () {//上报报错信息
-  let error = getStorage("_kx_error");
-  if (error===null) {
+};
+Report.prototype.report = function(obj) {
+  if(Math.random() > this.radom) {// 随机上报错误信息
     return false;
   }
-  // console.log(error);
-  new Image().src = `${this.reportUrl}?kxError=${error}`;
-  clearStorage("_kx_error")
-}
-Report.prototype.report = function(obj) {
+  const isDevReg = new RegExp("^(http|https):(\/\/)localhost:")
+  // if (isDevReg.test(window.location.origin))  return false;
   let errVal;
   try {
-    errVal = encodeURI(JSON.stringify(obj))
+    obj.uuid = this.uuid;
+    errVal = JSON.stringify(obj);
+    errVal = errVal.replace(/"/g,"")
   } catch (error) {}
+  console.log(this);
   
-  new Image().src = `${this.reportUrl}?info=${errVal}`;
-  // console.log(obj);
-  // this.saveStorage(errVal);
-}
-Report.prototype.saveStorage = function(value) {//记录报错信息
-  let storage = getStorage("_kx_error");
-  let newError = storage===null ? value : (storage + this.splitSymbol + value);
-  saveStorage("_kx_error", newError);
-  var reg = new RegExp(this.splitSymbol, "g");  
-  // console.warn(newError.match(reg));
-  if (newError.match(reg) !== null && newError.match(reg).length>5 && this.auto) {
-    // console.log(newError.match(reg).length);
-    this.sendError();
-  }
-}
+  new Image().src = `${this.reportUrl}?acKxError=${errVal}`;
+};
 Report.prototype.resourceError = function() {
   //资源报错
   window.addEventListener(
     "error",
     e => {
       const eventType = [].toString.call(e, e);
-      if (eventType === "[object Event]") {// 过滤掉运行时错误
-        // console.log(e)
+      if (eventType === "[object Event]") {
+        // 过滤掉运行时错误
+        let { srcElement: { tagName, outerHTML, href, src, currentSrc }} = e;
+        // console.log(tagName);
+        let resourceUri = href || src;
+        if (tagName === "IMG") {
+          Boolean(currentSrc) ?  (resourceUri = currentSrc) : (resourceUri = "undefined");
+          if (e.srcElement.onerror !== null)  return false;//存在行内的 error事件  终止执行
+        } else {
+          (resourceUri === window.location.href) && (resourceUri = "undefined");
+        }
+        
         let obj = {
-          type: "resourceError",//类型  
-          userAgent: window.navigator.userAgent,
-          baseURI: window.location.href,
+          type: "resourceError", //类型
           time: +new Date,
           errorInfo: {
-            href: e.target.href || e.target.src,//资源
-            outerHTML: e.target.outerHTML,
-            tagName: e.target.tagName
+            resourceUri, //资源
+            outerHTML: outerHTML,
+            tagName: tagName
           }
-        }
-        this.report(obj)
+        };
+        this.report(obj);
       }
     },
     true
   );
-}
+};
 Report.prototype.eventError = function() {
   //代码运行报错
   const self = this;
   window.onerror = function() {
-    let [errorMessage, fileName, lineNo, columNo] = arguments;
-    let obj = {
-      type: "eventError",//类型  ErrorEvent  
-      userAgent: window.navigator.userAgent,
-      baseURI: window.location.href,
-      time: +new Date,
-      errorInfo: {
-        "fileName": fileName,
-        "message": errorMessage,
-        "lineNumber": lineNo,
-        "columnNumber": columNo
+    let [errorMessage, scriptURI, lineNo, columNo, err] = arguments;
+    let errStack;
+    if (!!err && !!err.stack) {
+      //可以直接使用堆栈信息
+      errStack = err.stack.toString();
+    } else if (!!arguments.callee) {
+      //尝试通过callee获取异常堆栈
+      let errmsg = [];
+      let f = arguments.callee.caller,
+        c = 3; //防止堆栈信息过大
+      while (f && --c > 0) {
+        errmsg.push(f.toString());
+        if (f === f.caller) {
+          break;
+        }
+        f = f.caller;
       }
+      errmsg = errmsg.join(",");
+      errStack = errmsg;
+    } else {
+      errStack = "";
     }
-    self.report(obj)
+    let obj = {
+      type: "eventError", //类型  ErrorEvent
+      time: +new Date(),
+      errorInfo: {
+        scriptURI: scriptURI,
+        message: errorMessage,
+        lineNumber: lineNo,
+        columnNumber: columNo,
+        errStack: errStack.substring(0, 1000) || ""
+      }
+    };
+    self.report(obj);
     // return true;
   };
-}
+};
 Report.prototype.httpError = function() {
   //接口请求错误
   let self = this;
-  // console.log(proxyXMLHttpRequest);
   proxyXMLHttpRequest({
     open() {
       this.method = (arguments[0] || [])[0];
@@ -106,36 +129,36 @@ Report.prototype.httpError = function() {
       this.send_time = +new Date;
     },
     onreadystatechange: function(xhr) {
-      // var ajax = xhr.xhr;
-      const { xhr: ajax, method, send_time} = xhr;
+      const { xhr: ajax, method, send_time } = xhr;
       if (ajax.readyState == 4) {
-      const {status, statusText, response, responseURL} = ajax;
-      const longTime = (+new Date > (3000+send_time)),httpError = !(status >= 200 && status < 208);
+        const { status, statusText, response, responseURL } = ajax;
+        const ready_time = +new Date();
+        const longTime = ready_time > (this.httpLongTime + send_time),
+          httpError = (!(status >= 200 && status < 208) && (status !== 0));
 
         //说明已经请求完毕
         if (longTime || httpError) {
           let obj = {
-            type: "httpError",//类型  ErrorEvent  
-            userAgent: window.navigator.userAgent,
-            baseURI: window.location.href,
-            time: +new Date,
+            type: "httpError", //类型  ErrorEvent
+            time: +new Date(),
             errorInfo: {
               req: {
                 method: method,
-                url: responseURL
+                url: responseURL.split("?").shift()
               },
               res: {
                 status,
                 statusText,
                 response,
-                longTime
+                resMs: ready_time-send_time
               }
             }
-          }
-          self.report(obj)
+          };
+          self.report(obj);
         }
       }
     }
-  })
-}
+  });
+};
+
 export default Report;
