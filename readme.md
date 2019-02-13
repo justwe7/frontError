@@ -116,4 +116,6 @@ window.addEventListener('error', (msg) => {
   }
   ```
 
-### ajax发送数据
+#### 参考  
+(监控)[https://segmentfault.com/a/1190000016959011#articleHeader10]   
+(监控github)[https://github.com/happylindz/blog/issues/5]  
