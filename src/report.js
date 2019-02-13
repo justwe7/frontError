@@ -45,7 +45,7 @@ Report.prototype.report = function(obj) {
   new Image().src = `${this.reportUrl}?acKxError=${errVal}`;
 };
 Report.prototype.resourceError = function() {
-  //资源报错
+  //资源请求异常
   window.addEventListener(
     "error",
     e => {
@@ -104,7 +104,7 @@ Report.prototype.eventError = function() {
       errStack = "";
     }
     let obj = {
-      type: "eventError", //类型  ErrorEvent
+      type: "eventError", //语法报错
       time: +new Date(),
       errorInfo: {
         scriptURI: scriptURI,
@@ -135,11 +135,9 @@ Report.prototype.httpError = function() {
         const ready_time = +new Date();
         const longTime = ready_time > (this.httpLongTime + send_time),
           httpError = (!(status >= 200 && status < 208) && (status !== 0));
-
-        //说明已经请求完毕
         if (longTime || httpError) {
           let obj = {
-            type: "httpError", //类型  ErrorEvent
+            type: "httpError", //接口异常
             time: +new Date(),
             errorInfo: {
               req: {
@@ -150,7 +148,7 @@ Report.prototype.httpError = function() {
                 status,
                 statusText,
                 response,
-                resMs: ready_time-send_time
+                duration: ready_time-send_time
               }
             }
           };

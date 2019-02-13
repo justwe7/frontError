@@ -1,14 +1,15 @@
-# 前端异常监控上报
-
+# 前端异常监控上报  
 ---
 
-### 使用  
+[GitHub地址](https://github.com/justwe7/frontError)  
+
+### 搭配elk使用  
 npm 使用：
 ``` bash
-npm i frontError -S 
+npm i front-error -S 
 
 main.js: 
-import frontError from 'frontError'
+import frontError from 'front-error'
 ```
 单文件引入
 ```javascript
@@ -71,7 +72,7 @@ window.addEventListener('error', (msg) => {
 - 资源引入报错
   ```javascript
   {
-    type: "resourceError",//类型  ErrorEvent  
+    type: "resourceError",
     time: 17444463423,//时间戳
     errorInfo: {
       {
@@ -85,7 +86,7 @@ window.addEventListener('error', (msg) => {
 - 代码报错
   ```javascript   
   {
-    type: "eventError",//类型  ErrorEvent  
+    type: "eventError",
     time: 1502863944724,
     errorInfo: {
       scriptURI: "http://localhost:4000/test.js",
@@ -99,7 +100,7 @@ window.addEventListener('error', (msg) => {
 - 网络请求报错
   ```javascript   
   {
-    type: "httpError",//类型  ErrorEvent  
+    type: "httpError"
     time: 1502863944724,
     errorInfo: {
       req: {
@@ -110,12 +111,12 @@ window.addEventListener('error', (msg) => {
         status: 404,
         statusText: "Not Found",
         response: "404 Not Found\n",
-        resMs: time //接口响应时间时长 (毫秒)
+        duration: time //接口响应时间时长 (毫秒)
       }
     }
   }
   ```
 
-#### 参考  
-(监控)[https://segmentfault.com/a/1190000016959011#articleHeader10]   
-(监控github)[https://github.com/happylindz/blog/issues/5]  
+#### 参考   
+[监控](https://segmentfault.com/a/1190000016959011#articleHeader10)    
+[监控github](https://github.com/happylindz/blog/issues/5)
