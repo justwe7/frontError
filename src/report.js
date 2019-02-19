@@ -33,14 +33,13 @@ Report.prototype.report = function(obj) {
     return false;
   }
   const isDevReg = new RegExp("^(http|https):(\/\/)localhost:")
-  // if (isDevReg.test(window.location.origin))  return false;
+  if (isDevReg.test(window.location.origin))  return false;
   let errVal;
   try {
     obj.uuid = this.uuid;
     errVal = JSON.stringify(obj);
     errVal = errVal.replace(/"/g,"")
   } catch (error) {}
-  console.log(this);
   
   new Image().src = `${this.reportUrl}?acKxError=${errVal}`;
 };
