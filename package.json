@@ -1,6 +1,6 @@
 {
   "name": "front-error",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "前端异常采集上报",
   "main": "dist/frontError.min.js",
   "scripts": {
