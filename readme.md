@@ -3,7 +3,10 @@
 
 [GitHub地址](https://github.com/justwe7/frontError)  
 
-### 搭配elk使用  
+## 使用
+此项目只捕获前端错误信息并整合，可搭配[kibana](https://www.elastic.co/guide/cn/kibana/current/setup.html)或接口进行上报   
+
+  
 npm 使用：
 ``` bash
 npm i front-error -S 
@@ -14,15 +17,18 @@ import frontError from 'front-error'
 单文件引入
 ```javascript
 <script src="frontError.min.js"></script>
+//（解决跨域的js脚本错误上报）iframe嵌套页面添加 crossorigin 属性否则无法获取报错信息 添加 crossOrigin 属性完成跨域上报，别忘了服务器也设置 Access-Control-Allow-Origin 的响应头。
 ```
 
 实例化
 ```javascript
 new frontError({
-  reportUrl: "https://justwe.com/img.png",//上报地址
-  uuid: "justwe_uuid",//uuid 用户标识key
-  timeout: 5000, //接口响应过长阈值
-  radom: 1, //错误过多减少上报数量  0-1
+  useAjax = false,//是否使用接口上报信息 接口地址为reportUrl  默认使用图片地址发送 
+  reportKey = "frontErrorInfo",//上报请求的key
+  reportUrl = "https://justwe.com/img.png",//上报地址 接口地址/图片地址
+  uuid = "justwe_uuid",//uuid 用户标识
+  timeout = 5000, //接口响应过长阈值
+  radom = 1, //错误过多减少上报数量  0-1 上报百分比 默认为100%上报
 })
 ```
 
@@ -57,11 +63,10 @@ window.onerror = function(errorMessage, scriptURI, lineNo, columnNo, error) {
   console.log('lineNo: ' + lineNo); // 异常行号
   console.log('columnNo: ' + columnNo); // 异常列号
   console.log('error: ' + error); // 异常堆栈信息
-  return true;//如果返回true  那么将会阻止执行浏览器默认的错误处理函数 控制台不会抛错
 };
 ```
 
-由于网络请求异常会触发一个Event接口的error事件，并执行该元素上的onerror()处理函数，但不会事件冒泡，因此必须在捕获阶段将其捕捉到才行，但是这种方式虽然可以捕捉到网络请求的异常，但是无法判断 HTTP 的状态是 404 还是403。
+由于网络请求异常会触发一个Event接口的error事件，并执行该元素上的onerror()处理函数，但不会事件冒泡，因此必须在捕获阶段将其捕捉到才行，但是这种方式虽然可以捕捉到网络请求的异常，但是无法判断 HTTP 的状态是 404 还是403。通过断点调试发现当出现404错误时类型为ErrorEvent，对应的event确实是没有message的
 ```javascript
 window.addEventListener('error', (msg) => {
   console.log(msg);
@@ -116,6 +121,11 @@ window.addEventListener('error', (msg) => {
     }
   }
   ```
+
+### 已知问题  
+- 无法监测到jQuery2.x版本以下的接口报错，原因是jq重写了onreadystatechange方法覆盖 
+- 压缩代码无法定位到错误具体位置，开sourceMap感觉不太好  
+- 图片直接上报不太妥,考虑添加OPTIONS确定  
 
 #### 参考   
 [监控](https://segmentfault.com/a/1190000016959011#articleHeader10)    

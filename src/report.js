@@ -11,13 +11,17 @@ import proxyXMLHttpRequest from "./util/xhr";
 
 const Report = function(
   {
-    reportUrl = "https://justwe.com/img.png",//上报地址
+    useAjax = false,//是否使用接口上报信息 接口地址为reportUrl  默认使用图片地址发送 
+    reportKey = "frontErrorInfo",//上报请求的key
+    reportUrl = "https://justwe.com/img.png",//上报地址 接口地址/图片地址
     uuid = "justwe_uuid",//uuid 用户标识
     timeout = 5000, //接口响应过长阈值
-    radom = 1, //错误过多减少上报数量  0-1
+    radom = 1, //错误过多减少上报数量  0-1 上报百分比 默认为100%上报
   } = {}
 ) {
+  this.useAjax = useAjax;
   this.reportUrl = reportUrl;
+  this.reportKey = reportKey;
   this.httpLongTime = timeout;
   this.uuid = getCookie(uuid) || getUuid(uuid); 
   this.radom = parseFloat(radom);
@@ -32,16 +36,23 @@ Report.prototype.report = function(obj) {
   if(Math.random() > this.radom) {// 随机上报错误信息
     return false;
   }
-  const isDevReg = new RegExp("^(http|https):(\/\/)localhost:")
-  if (isDevReg.test(window.location.origin))  return false;
+  const isDevReg = new RegExp("^(http|https):(\/\/)localhost:");
+  const {uuid, useAjax, reportKey, reportUrl} = this;
+  if (isDevReg.test(window.location.origin)) return false;//localhost环境不上报
   let errVal;
   try {
-    obj.uuid = this.uuid;
+    obj.uuid = uuid;
     errVal = JSON.stringify(obj);
-    errVal = errVal.replace(/"/g,"")
+    !useAjax && (errVal = errVal.replace(/"/g,""))//使用cdn地址上报删除"增加可读性
   } catch (error) {}
-  
-  new Image().src = `${this.reportUrl}?acKxError=${errVal}`;
+  const errInfo = `${reportUrl}?${reportKey}=${errVal}`;
+  if (useAjax) {
+    const ajax = new XMLHttpRequest();
+    ajax.open('get', `${reportUrl}?${reportKey}=${errVal}`);
+    ajax.send();
+  } else {
+    new Image().src = errInfo;
+  }
 };
 Report.prototype.resourceError = function() {
   //资源请求异常
@@ -51,12 +62,13 @@ Report.prototype.resourceError = function() {
       const eventType = [].toString.call(e, e);
       if (eventType === "[object Event]") {
         // 过滤掉运行时错误
-        let { srcElement: { tagName, outerHTML, href, src, currentSrc }} = e;
+        let { tagName, outerHTML, href, src, currentSrc } = theTag = e.srcElement || e.originalTarget || e.target;
+        // let { srcElement: { tagName, outerHTML, href, src, currentSrc }} = e;
         // console.log(tagName);
         let resourceUri = href || src;
         if (tagName === "IMG") {
           Boolean(currentSrc) ?  (resourceUri = currentSrc) : (resourceUri = "undefined");
-          if (e.srcElement.onerror !== null)  return false;//存在行内的 error事件  终止执行
+          if (theTag.onerror !== null)  return false;//存在行内的 error事件  终止执行
         } else {
           (resourceUri === window.location.href) && (resourceUri = "undefined");
         }
@@ -119,7 +131,7 @@ Report.prototype.eventError = function() {
 };
 Report.prototype.httpError = function() {
   //接口请求错误
-  let self = this;
+  const self = this;
   proxyXMLHttpRequest({
     open() {
       this.method = (arguments[0] || [])[0];
@@ -132,7 +144,7 @@ Report.prototype.httpError = function() {
       if (ajax.readyState == 4) {
         const { status, statusText, response, responseURL } = ajax;
         const ready_time = +new Date();
-        const longTime = ready_time > (this.httpLongTime + send_time),
+        const longTime = ready_time > (self.httpLongTime + send_time),
           httpError = (!(status >= 200 && status < 208) && (status !== 0));
         if (longTime || httpError) {
           let obj = {

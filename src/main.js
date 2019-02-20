@@ -11,3 +11,4 @@ import Report from './report.js';
 })('frontError', function () {
   return Report
 });
+// new Report({useAjax: true})
