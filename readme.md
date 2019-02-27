@@ -20,15 +20,15 @@ import frontError from 'front-error'
 //（解决跨域的js脚本错误上报）iframe嵌套页面添加 crossorigin 属性否则无法获取报错信息 添加 crossOrigin 属性完成跨域上报，别忘了服务器也设置 Access-Control-Allow-Origin 的响应头。
 ```
 
-实例化
+实例化(默认值,非必选配置)
 ```javascript
 new frontError({
-  useAjax = false,//是否使用接口上报信息 接口地址为reportUrl  默认使用图片地址发送 
-  reportKey = "frontErrorInfo",//上报请求的key
-  reportUrl = "https://justwe.com/img.png",//上报地址 接口地址/图片地址
-  uuid = "justwe_uuid",//uuid 用户标识
-  timeout = 5000, //接口响应过长阈值
-  radom = 1, //错误过多减少上报数量  0-1 上报百分比 默认为100%上报
+  useAjax: false,//是否使用接口上报信息 接口地址为reportUrl  默认使用图片地址发送 
+  reportKey: "frontErrorInfo",//上报请求的key
+  reportUrl: "https://justwe.com/img.png",//上报地址 接口地址/图片地址
+  uuid: "justwe_uuid",//uuid 用户标识
+  timeout: 5000, //接口响应过长阈值
+  radom: 1, //错误过多减少上报数量  0-1 上报百分比 默认为100%上报
 })
 ```
 
