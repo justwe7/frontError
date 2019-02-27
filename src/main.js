@@ -11,9 +11,4 @@ import Report from './report.js';
 })('frontError', function () {
   return Report
 });
-window.onload = function () {
-  document.getElementById("btn").onclick = function () {
-    console.log(98765);
-  }
-}
 // new Report({useAjax: true})

@@ -64,12 +64,13 @@ Report.prototype.resourceError = function() {
         // 过滤掉运行时错误
         /* var r, n = (r = e.target ? e.target : e.srcElement) && r.outerHTML;
         n && n.length > 200 && (n = n.slice(0, 200)); */
-        let { tagName, outerHTML, href, src, currentSrc } = theTag = e.srcElement || e.originalTarget || e.target;
+        let theTag = e.srcElement || e.originalTarget || e.target;
+        var { tagName, outerHTML, href, src, currentSrc } = theTag;
         // let { srcElement: { tagName, outerHTML, href, src, currentSrc }} = e;
         // console.log(tagName);
         let resourceUri = href || src;
         if (tagName === "IMG") {
-          Boolean(currentSrc) ?  (resourceUri = currentSrc) : (resourceUri = "undefined");
+          Boolean(currentSrc) ? (resourceUri = currentSrc) : (resourceUri = "undefined");
           if (theTag.onerror !== null)  return false;//存在行内的 error事件  终止执行
         } else {
           (resourceUri === window.location.href) && (resourceUri = "undefined");
@@ -102,15 +103,17 @@ Report.prototype.eventError = function() {
     } else if (!!arguments.callee) {
       //尝试通过callee获取异常堆栈
       let errmsg = [];
-      let f = arguments.callee.caller,
-        c = 3; //防止堆栈信息过大
-      while (f && --c > 0) {
-        errmsg.push(f.toString());
-        if (f === f.caller) {
-          break;
+      try {
+        let f = arguments.callee.caller,
+          c = 3; //防止堆栈信息过大
+        while (f && --c > 0) {
+          errmsg.push(f.toString());
+          if (f === f.caller) {
+            break;
+          }
+          f = f.caller;
         }
-        f = f.caller;
-      }
+      } catch (error) {}
       errmsg = errmsg.join(",");
       errStack = errmsg;
     } else {
