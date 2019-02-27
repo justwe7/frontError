@@ -62,6 +62,8 @@ Report.prototype.resourceError = function() {
       const eventType = [].toString.call(e, e);
       if (eventType === "[object Event]") {
         // 过滤掉运行时错误
+        /* var r, n = (r = e.target ? e.target : e.srcElement) && r.outerHTML;
+        n && n.length > 200 && (n = n.slice(0, 200)); */
         let { tagName, outerHTML, href, src, currentSrc } = theTag = e.srcElement || e.originalTarget || e.target;
         // let { srcElement: { tagName, outerHTML, href, src, currentSrc }} = e;
         // console.log(tagName);
