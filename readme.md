@@ -14,7 +14,7 @@ npm i front-error -S
 main.js: 
 import frontError from 'front-error'
 ```
-单文件引入
+单文件引入(/dist/frontError.min.js)
 ```javascript
 <script src="frontError.min.js"></script>
 //（解决跨域的js脚本错误上报）iframe嵌套页面添加 crossorigin 属性否则无法获取报错信息 添加 crossOrigin 属性完成跨域上报，别忘了服务器也设置 Access-Control-Allow-Origin 的响应头。
